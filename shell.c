@@ -8,6 +8,8 @@
 #include<pwd.h>
 #include<sys/wait.h>
 #include<signal.h>
+#include<sys/stat.h>
+#include<fcntl.h>
 
 #define MAX_NO_OF_CMD_ELEMENTS (10)
 
@@ -38,67 +40,6 @@ void prompt_me()
 	printf("%s@%s:%s$ ",username,hostname,cwd);
 }
 
-/*void pinfo(char **argv)
-{
-	char path[1024];
-	char c;
-	char buf[1024];
-	char filename[1000];
-	if(strcmp(argv[1],"")!=0)
-	{
-		printf("pid --- %s\n",argv[1]);
-		sprintf(filename,"/proc/%s/status",argv[1]);
-		FILE *f = fopen(filename, "r");
-		FILE *fp;
-
-		char state;
-		fgets(buf,1024,f);
-		fgets(buf,1024,f);
-		sscanf(buf, "State: %c\n", &state);
-		printf("process state = %c\n", state);
-		fclose(f);
-		char target_path[1024];
-		sprintf(filename, "/proc/%d/exe",pid);
-		int len = readlink (filename, target_path, sizeof (target_path));
-		char buffer[1024];
-		if(len ==-1)
-		{
-			perror("readlink");
-		}
-		else
-		{
-			target_path[len] = '\0';
-			printf("executable path: %s\n", target_path);
-		}
-	}
-	else
-	{
-		printf("pid --- %s\n",argv[1]);
-		sprintf(filename,"/proc/%s/status",argv[1]);
-		FILE *f = fopen(filename, "r");
-		FILE *fp;
-
-		char state;
-		fgets(buf,1024,f);
-		fgets(buf,1024,f);
-		sscanf(buf, "State: %c\n", &state);
-		printf("process state = %c\n", state);
-		fclose(f);
-		char target_path[1024];
-		sprintf(filename, "/proc/self/exe");
-		int len = readlink (filename, target_path, sizeof (target_path));
-		char buffer[1024];
-		if(len ==-1)
-		{
-			perror("readlink");
-		}
-		else
-		{
-			target_path[len] = '\0';
-			printf("executable path: %s\n", target_path);
-		}
-	}
-}*/
 
 int pinfo(int argc, char * argv[]) {
 	char filename[1000];
@@ -126,7 +67,7 @@ int pinfo(int argc, char * argv[]) {
 		target_path[len] = '\0';
 		printf("executable path: %s\n", target_path);
 	}
-return 0;
+	return 0;
 }
 
 void pwd_me()
@@ -164,6 +105,8 @@ void execute(char **argv,int num)
 	int i;
 	pid_t  pid;
 	int    status;
+	char *name;
+
 
 	if ((pid = fork()) < 0) 
 	{     /* fork a child process*/
@@ -172,6 +115,34 @@ void execute(char **argv,int num)
 	}
 	else if (pid == 0) 
 	{          /* for the child process: */
+		for(i=0;i<num;i++)
+		{
+			if(strcmp(argv[i],"<")==0)
+			{
+				name = strdup(argv[i+1]);
+				int fin = open(name, O_RDONLY,0);
+				dup2(fin,0); //put error
+				close(fin);
+				argv[i]=NULL;
+				fflush(stdin);
+			}
+			else if(strcmp(argv[i], ">")==0)
+			{
+				name = strdup(argv[i+1]);
+				int fout = creat(argv[i+1],0644);
+				dup2(fout,1);
+				close(fout);
+				argv[i] = NULL;
+			}
+			else if(strcmp(argv[i], ">>")==0)
+			{
+				name = strdup(argv[i+1]);
+				int fout = creat(argv[i+1],O_RDONLY | O_WRONLY | O_APPEND | O_CREAT | 0644);
+				dup2(fout,1);
+				close(fout);
+				argv[i] = NULL;
+			}
+		}
 		if(strcmp(argv[0],"cd")==0)
 			cd_me(argv);
 		else if(strcmp(argv[0],"pwd")==0)
