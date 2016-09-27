@@ -81,7 +81,7 @@ void cd_me(char **argv)
 	chdir(argv[1]);
 	if(getcwd(cwd,100)!=0)
 	{
-		perror(" ");
+		;
 	}
 	if(strcmp("~\0",argv[1])==0||strcmp("\0",argv[1])==0)
 		chdir(basedir);
