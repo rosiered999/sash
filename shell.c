@@ -38,25 +38,83 @@ void prompt_me()
 	printf("%s@%s:%s$ ",username,hostname,cwd);
 }
 
-void pinfo(char **argv)
+/*void pinfo(char **argv)
 {
 	char path[1024];
 	char c;
 	char buf[1024];
+	char filename[1000];
+	if(strcmp(argv[1],"")!=0)
+	{
+		printf("pid --- %s\n",argv[1]);
+		sprintf(filename,"/proc/%s/status",argv[1]);
+		FILE *f = fopen(filename, "r");
+		FILE *fp;
+
+		char state;
+		fgets(buf,1024,f);
+		fgets(buf,1024,f);
+		sscanf(buf, "State: %c\n", &state);
+		printf("process state = %c\n", state);
+		fclose(f);
+		char target_path[1024];
+		sprintf(filename, "/proc/%d/exe",pid);
+		int len = readlink (filename, target_path, sizeof (target_path));
+		char buffer[1024];
+		if(len ==-1)
+		{
+			perror("readlink");
+		}
+		else
+		{
+			target_path[len] = '\0';
+			printf("executable path: %s\n", target_path);
+		}
+	}
+	else
+	{
+		printf("pid --- %s\n",argv[1]);
+		sprintf(filename,"/proc/%s/status",argv[1]);
+		FILE *f = fopen(filename, "r");
+		FILE *fp;
+
+		char state;
+		fgets(buf,1024,f);
+		fgets(buf,1024,f);
+		sscanf(buf, "State: %c\n", &state);
+		printf("process state = %c\n", state);
+		fclose(f);
+		char target_path[1024];
+		sprintf(filename, "/proc/self/exe");
+		int len = readlink (filename, target_path, sizeof (target_path));
+		char buffer[1024];
+		if(len ==-1)
+		{
+			perror("readlink");
+		}
+		else
+		{
+			target_path[len] = '\0';
+			printf("executable path: %s\n", target_path);
+		}
+	}
+}*/
+
+int pinfo(int argc, char * argv[]) {
 	char filename[1000];
 	printf("pid --- %s\n",argv[1]);
 	sprintf(filename,"/proc/%s/status",argv[1]);
 	FILE *f = fopen(filename, "r");
 	FILE *fp;
 
-	char state;
+	char state,buf[1024];
 	fgets(buf,1024,f);
 	fgets(buf,1024,f);
 	sscanf(buf, "State: %c\n", &state);
 	printf("process state = %c\n", state);
 	fclose(f);
 	char target_path[1024];
-	sprintf(filename, "/proc/%d/exe",pid);
+	sprintf(filename, "/proc/%s/exe",argv[1]);
 	int len = readlink (filename, target_path, sizeof (target_path));
 	char buffer[1024];
 	if(len ==-1)
@@ -68,6 +126,7 @@ void pinfo(char **argv)
 		target_path[len] = '\0';
 		printf("executable path: %s\n", target_path);
 	}
+return 0;
 }
 
 void pwd_me()
@@ -120,7 +179,7 @@ void execute(char **argv,int num)
 		else if(strcmp(argv[0],"echo")==0)
 			echo_me(argv,num);
 		else if(strcmp(argv[0],"pinfo")==0)
-			pinfo(argv);
+			pinfo(num,argv);
 		else if(strcmp(argv[0],"exit")==0)
 			return;
 		int c;
