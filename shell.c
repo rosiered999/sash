@@ -16,13 +16,13 @@ struct passwd *pw; /*to get username*/
 int pid;
 char* username, *hostname;
 char cwd[100];
-char *basedir;
+char basedir[100];
 int bg;
 
 void init_prompt()
 {
 	getcwd(cwd,100);
-	basedir = cwd;
+	strcpy(basedir,cwd);
 	uname(&u);
 	pw = getpwuid(getuid());
 	username = pw->pw_name;
@@ -83,7 +83,7 @@ void cd_me(char **argv)
 	{
 		;
 	}
-	if(strcmp("~\0",argv[1])==0||strcmp("\0",argv[1])==0)
+	if(strcmp("~",argv[1])==0||strcmp("",argv[1])==0)
 		chdir(basedir);
 }
 
