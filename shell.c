@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<sys/resource.h>
 #include<stdlib.h>
 #include<errno.h>
 #include<sys/utsname.h>
@@ -13,6 +14,15 @@
 
 #define MAX_NO_OF_CMD_ELEMENTS (10)
 
+struct jobs{
+	int num;
+	int pid;
+	int status;
+	char *name;
+};
+
+struct jobs jobList[50];
+int jobNo = 0;
 struct utsname u; /* to get hostname*/
 struct passwd *pw; /*to get username*/
 int pid;
@@ -31,10 +41,17 @@ void init_prompt()
 	hostname = u.nodename;
 }
 
+void listjobs()
+{
+	int i;
+	for(i=1;i<=jobNo;i++)
+	{
+		printf("[%d] %s {%d}\n", i,jobList[i].name,jobList[i].pid);
+	}
+}
 
 void prompt_me()
 {
-	sleep(1);
 	getcwd(cwd,100);
 	bg =0;
 	printf("%s@%s:%s$ ",username,hostname,cwd);
@@ -137,7 +154,7 @@ void execute(char **argv,int num)
 			else if(strcmp(argv[i], ">>")==0)
 			{
 				name = strdup(argv[i+1]);
-				int fout = creat(argv[i+1],O_RDONLY | O_WRONLY | O_APPEND | O_CREAT | 0644);
+				int fout = open(name, O_RDWR | O_APPEND);
 				dup2(fout,1);
 				close(fout);
 				argv[i] = NULL;
@@ -151,6 +168,8 @@ void execute(char **argv,int num)
 			echo_me(argv,num);
 		else if(strcmp(argv[0],"pinfo")==0)
 			pinfo(num,argv);
+		else if(strcmp(argv[0], "listjobs")==0)
+			listjobs();
 		else if(strcmp(argv[0],"exit")==0)
 			return;
 		int c;
@@ -163,9 +182,21 @@ void execute(char **argv,int num)
 		}
 	}
 	else if(bg!=1){
-		while (wait(&status) != pid);
-
+/*		jobNo++;
+		jobList[jobNo].name = strdup(argv[0]);
+		jobList[jobNo].num = jobNo;
+		jobList[jobNo].status = 0;
+*/		while (wait(&status) != pid);
 	}
+	else if(bg==1)
+	{
+		jobNo++;
+		jobList[jobNo].name = strdup(argv[0]);
+		jobList[jobNo].num = jobNo;
+		jobList[jobNo].status = 1;
+	}
+
+	jobList[jobNo].pid = pid;
 }
 
 void input()
